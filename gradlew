@@ -1,21 +1,50 @@
 #!/usr/bin/env sh
+
 ##############################################################################
-# Gradle start up script for UN*X
+##
+##  Gradle start up script for UN*X
+##
 ##############################################################################
+
+# Attempt to set APP_HOME
+# Resolve links: $0 may be a link
+PRG="$0"
+# Need this for relative symlinks.
+while [ -h "$PRG" ] ; do
+    ls=`ls -ld "$PRG"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '/.*' > /dev/null; then
+        PRG="$link"
+    else
+        PRG=`dirname "$PRG"`/"$link"
+    fi
+done
+SAVED="`pwd`"
+cd "`dirname \"$PRG\"`/" >/dev/null
+APP_HOME="`pwd -P`"
+cd "$SAVED" >/dev/null
+
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
-APP_HOME="`pwd -P`"
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+DEFAULT_JVM_OPTS="-Xmx64m -Xms64m"
 
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+# Use the maximum available, or at least 1GB, for a typical build.
+if [ -z "$JAVA_OPTS" ] ; then
+    JAVA_OPTS="-Xmx1024m"
+fi
+
+warn () {
+    echo "$*"
+}
 
 die () {
     echo
-    echo "ERROR: $*"
+    echo "$*"
     echo
     exit 1
-} >&2
+}
 
 # OS specific support (must be 'true' or 'false').
 cygwin=false
@@ -29,7 +58,7 @@ case "`uname`" in
   Darwin* )
     darwin=true
     ;;
-  MINGW* )
+  MSYS* | MINGW* )
     msys=true
     ;;
   NONSTOP* )
@@ -37,32 +66,27 @@ case "`uname`" in
     ;;
 esac
 
-JAVACMD="java"
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
-# Increase the maximum file descriptors if we can.
-MAX_FD="maximum"
-warn () {
-    echo "$*"
-} >&2
-
-if [ "$cygwin" = "false" -a "$darwin" = "false" -a "$nonstop" = "false" ] ; then
-    MAX_FD_LIMIT=`ulimit -H -n`
-    if [ $? -eq 0 ] ; then
-        if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ] ; then
-            MAX_FD="$MAX_FD_LIMIT"
-        fi
-        ulimit -n $MAX_FD
-        if [ $? -ne 0 ] ; then
-            warn "Could not set maximum file descriptor limit: $MAX_FD"
-        fi
+# Determine the Java command to use to start the JVM.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/bin/java" ] ; then
+        # Now, GVY-237 should no longer be a problem with the JDK 7
+        JAVACMD="$JAVA_HOME/bin/java"
     else
-        warn "Could not query maximum file descriptor limit: $MAX_FD_LIMIT"
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME"
     fi
+else
+    JAVACMD="java"
 fi
 
-GRADLE_OPTS="$GRADLE_OPTS \"-Dorg.gradle.appname=$APP_BASE_NAME\""
+# Escape application args
+save () {
+    for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"; done
+}
+APP_ARGS=$(save "$@")
 
-exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
-  -classpath "$CLASSPATH" \
-  org.gradle.wrapper.GradleWrapperMain \
-  "$@"
+# Collect all arguments for the java command
+eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "\"$CLASSPATH\"" org.gradle.wrapper.GradleWrapperMain "$APP_ARGS"
+
+exec "$JAVACMD" "$@"
