@@ -17,10 +17,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 8.2 # Robotun eski sürümü kullanmasını yasaklıyoruz!
+          gradle-version: 8.2
 
       - name: Build APK
-        run: gradle assembleDebug --stacktrace # gradlew yerine doğrudan sistem gradlesini kullanıyoruz
+        run: gradle assembleDebug --stacktrace
