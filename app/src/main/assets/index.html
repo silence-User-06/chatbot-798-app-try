@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>chatbot798</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:sans-serif;background:#e8e8e8;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.topbar{background:#6457c6;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.topbar-back{color:white;font-size:24px;cursor:pointer;padding:4px 8px 4px 0;}
+.topbar-name{color:white;font-size:17px;font-weight:bold;flex:1;}
+.topbar-menu{color:white;font-size:26px;cursor:pointer;padding:4px;}
+.chat-area{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:4px;}
+.date-div{text-align:center;color:#888;font-size:13px;margin:6px 0;}
+.row{display:flex;align-items:flex-end;gap:7px;}
+.row.out{justify-content:flex-end;}
+.row.inc{justify-content:flex-start;}
+.avatar{width:34px;height:34px;border-radius:50%;background:#5545b0;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:bold;}
+.bubble{max-width:72%;padding:9px 13px;border-radius:18px;font-size:15px;line-height:1.5;word-break:break-word;}
+.bubble.out{background:#6457c6;color:white;border-bottom-right-radius:4px;}
+.bubble.inc{background:white;color:#222;border-bottom-left-radius:4px;}
+.meta{font-size:11px;margin-left:8px;opacity:0.7;}
+.read{font-size:11px;color:#888;text-align:right;margin-top:2px;margin-right:4px;}
+.typing{display:flex;align-items:center;gap:5px;padding:10px 13px;background:white;border-radius:18px;border-bottom-left-radius:4px;}
+.dot{width:7px;height:7px;border-radius:50%;background:#aaa;animation:b 1.2s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.bottom{background:white;padding:8px 12px;display:flex;align-items:center;gap:10px;border-top:1px solid #ddd;flex-shrink:0;}
+.cnt{font-size:14px;color:#888;min-width:24px;text-decoration:underline;}
+#inp{flex:1;border:none;outline:none;background:transparent;font-size:15px;color:#222;resize:none;max-height:80px;line-height:1.4;padding:2px 0;}
+.send{background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.card{background:white;border-radius:16px;padding:24px 20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;}
+.card h3{font-size:17px;font-weight:bold;color:#222;}
+.card p{font-size:13px;color:#666;line-height:1.6;}
+.card input{border:1.5px solid #ddd;border-radius:10px;padding:11px 12px;font-size:15px;outline:none;width:100%;}
+.card input:focus{border-color:#6457c6;}
+.card .sbtn{background:#6457c6;color:white;border:none;border-radius:10px;padding:13px;font-size:16px;cursor:pointer;font-weight:bold;}
+.card .hint{font-size:12px;color:#aaa;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-back" onclick="Android.onBackPressed()">&#8592;</span>
+  <span class="topbar-name">chatbot798</span>
+  <span class="topbar-menu" onclick="Android.showMenu()">&#8942;</span>
+</div>
+
+<div class="chat-area" id="chat"></div>
+
+<div class="bottom">
+  <span class="cnt" id="cnt">0</span>
+  <textarea id="inp" rows="1" placeholder="Mesaj yazın..."></textarea>
+  <button class="send" onclick="send()">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M22 2L11 13" stroke="#6457c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#6457c6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>
+
+<div class="overlay" id="ov" style="display:none">
+  <div class="card">
+    <h3>Gemini API Anahtarı</h3>
+    <p>Sohbete başlamak için Gemini API anahtarınızı girin. Cihazınızda kaydedilir, bir daha sorulmaz.</p>
+    <input type="password" id="keyIn" placeholder="AIza..."/>
+    <button class="sbtn" onclick="saveKey()">Kaydet ve Başla</button>
+    <p class="hint">Anahtar almak için aistudio.google.com</p>
+  </div>
+</div>
+
+<script>
+let first = true, hist = [];
+
+function init() {
+  try {
+    const k = Android.getApiKey();
+    if (!k) showOv();
+  } catch(e) { 
+    // Android nesnesi yoksa (tarayıcı testi)
+    showOv(); 
+  }
+}
+
+function showOv() {
+  document.getElementById('ov').style.display = 'flex';
+  setTimeout(() => document.getElementById('keyIn').focus(), 300);
+}
+
+function saveKey() {
+  const v = document.getElementById('keyIn').value.trim();
+  if (!v) return;
+  try {
+    Android.saveApiKey(v);
+  } catch(e) {
+    localStorage.setItem('temp_key', v);
+  }
+  document.getElementById('ov').style.display = 'none';
+}
+
+const inp = document.getElementById('inp');
+const cnt = document.getElementById('cnt');
+inp.addEventListener('input', function() {
+  cnt.textContent = this.value.length;
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+});
+inp.addEventListener('keydown', e => { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} });
+
+function time() {
+  const n=new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+function dateStr() {
+  const d=new Date();
+  const days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+' '+days[d.getDay()];
+}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function sc(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight;}
+
+function addOut(txt,t){
+  const c=document.getElementById('chat');
+  const r=document.createElement('div');r.className='row out';
+  r.innerHTML=`<div style="display:flex;flex-direction:column;align-items:flex-end">
+    <div class="bubble out">${esc(txt)}<span class="meta">${t} &#10003;&#10003;</span></div>
+    <div class="read">görüldü</div></div>`;
+  c.appendChild(r);sc();
+}
+function addTyping(){
+  const c=document.getElementById('chat');
+  const r=document.createElement('div');r.className='row inc';r.id='typ';
+  r.innerHTML=`<div class="avatar">C</div><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  c.appendChild(r);sc();
+}
+function rmTyping(){const t=document.getElementById('typ');if(t)t.remove();}
+function addIn(txt,t){
+  const c=document.getElementById('chat');
+  const r=document.createElement('div');r.className='row inc';
+  r.innerHTML=`<div class="avatar">C</div><div class="bubble inc">${esc(txt)}<span class="meta">${t}</span></div>`;
+  c.appendChild(r);sc();
+}
+
+async function send(){
+  const txt=inp.value.trim();
+  if(!txt)return;
+  
+  let k;
+  try { k = Android.getApiKey(); } catch(e) { k = localStorage.getItem('temp_key'); }
+  
+  if(!k){showOv();return;}
+  if(first){
+    const d=document.createElement('div');d.className='date-div';d.textContent=dateStr();
+    document.getElementById('chat').appendChild(d);first=false;
+  }
+  const t=time();
+  inp.value='';cnt.textContent='0';inp.style.height='auto';
+  hist.push({role:'user',parts:[{text:txt}]});
+  addOut(txt,t);addTyping();
+  
+  try{
+    // DOĞRUDAN GOOGLE GEMINI API BAĞLANTISI (BACKEND GEREKTİRMEZ)
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${k}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents: hist})
+    });
+    const data=await res.json();
+    rmTyping();
+    
+    if(data.error){
+      addIn('Hata: ' + (data.error.message || 'API Anahtarınızı kontrol edin.'), time());
+    }
+    else{
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Yanıt alınamadı.";
+      hist.push({role:'model',parts:[{text:reply}]});
+      addIn(reply,time());
+    }
+  }catch(e){
+    rmTyping();addIn('Bağlantı hatası. İnternet bağlantınızı kontrol edin.',time());
+  }
+}
+
+init();
+</script>
+</body>
+</html>
