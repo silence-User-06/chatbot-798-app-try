@@ -15,9 +15,14 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Grant Execute Permission for Gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate Wrapper JAR
+        run: gradle wrapper # İşte bu komut o eksik .jar dosyasını senin için oluşturur!
+
+      - name: Grant Execute Permission
         run: chmod +x gradlew
 
       - name: Build APK
